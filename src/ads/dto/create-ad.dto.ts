@@ -1,4 +1,13 @@
-import { IsNotEmpty, IsString, Length } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  Length,
+  Max,
+  Min,
+} from 'class-validator';
+import { allowedPrice } from '../../shared/constants/allowed-price';
 
 export class CreateAdDto {
   @IsString()
@@ -14,8 +23,11 @@ export class CreateAdDto {
   state: 'used' | 'new';
 
   @IsNotEmpty()
-  @IsString()
-  price: string;
+  @IsNumber()
+  @Min(allowedPrice.min)
+  @Max(allowedPrice.max)
+  @Type(() => Number)
+  price: number;
 
   @IsString()
   @Length(10, 400)

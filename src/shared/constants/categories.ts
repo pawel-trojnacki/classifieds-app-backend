@@ -2,7 +2,7 @@ export const categories = [
   'laptops',
   'smartphones',
   'tablets',
-  'pc & monitors',
+  'monitors',
   'headphones',
   'loudspeakers',
   'smartwatches',

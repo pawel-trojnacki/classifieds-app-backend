@@ -8,12 +8,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
-
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './schema/user.schema';
-import { mainResponse } from '../shared/utils/main-response';
-import { ResMessage } from '../shared/types/res-message';
+import { ErrMessage } from '../shared/types/res-message';
 import { MainResponse } from '../shared/types/response';
 import { Ad } from '../ads/schema/ad.schema';
 import { AuthService } from '../auth/auth.service';
@@ -38,8 +35,20 @@ export class UsersService {
     return await this.userModel.findOne({ currentToken }).exec();
   }
 
+  async findById(id: string): Promise<User> {
+    return await this.userModel.findById(id).exec();
+  }
+
   async addAd(user: User, ad: Ad): Promise<User> {
     user.ads = [...user.ads, ad._id];
+    return await user.save();
+  }
+
+  async removeAd(user: User, ad: Ad): Promise<User> {
+    user.ads = user.ads.filter((userAd) => {
+      return userAd.toString() !== ad._id.toString();
+    });
+
     return await user.save();
   }
 
@@ -51,14 +60,12 @@ export class UsersService {
 
     const isExistingEmail = await this.findByEmail(email);
     if (isExistingEmail) {
-      throw new ConflictException('User with this email already exists.');
+      throw new ConflictException(ErrMessage.UserExists);
     }
 
     const isExistingPhone = await this.findByPhone(phone);
     if (isExistingPhone) {
-      throw new ConflictException(
-        'User with this phone number already exists.',
-      );
+      throw new ConflictException(ErrMessage.UserExists);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -78,19 +85,16 @@ export class UsersService {
     return await this.authService.login({ email, password }, res);
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async addAdToFavourites(user: User, ad: Ad): Promise<User> {
+    user.favourites = [...user.favourites, ad._id];
+    return await user.save();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
+  async removeAdFromFavourites(user: User, ad: Ad): Promise<User> {
+    user.favourites = user.favourites.filter((favouriteAd) => {
+      return favouriteAd.toString() !== ad._id.toString();
+    });
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+    return await user.save();
   }
 }

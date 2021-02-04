@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -18,7 +19,8 @@ import { User } from '../users/schema/user.schema';
 import { UsersService } from '../users/users.service';
 import { FilesService } from '../files/files.service';
 import { SortOptions } from '../shared/types/sort-options';
-import { AdCategories } from 'src/shared/types/ad-categories';
+import { AdCategories } from '../shared/types/ad-categories';
+import { Filters } from '../shared/types/filters';
 
 @Injectable()
 export class AdsService {
@@ -33,7 +35,7 @@ export class AdsService {
     createAdDto: CreateAdDto,
     files: Express.Multer.File[],
   ): Promise<MainResponse> {
-    const { title, category, state, price } = createAdDto;
+    const { title, category, state, price, description } = createAdDto;
 
     if (!adState.includes(state)) {
       throw new BadRequestException('Incorrect state');
@@ -53,6 +55,7 @@ export class AdsService {
       category,
       state,
       price: +price,
+      description,
       images: images || [],
       creator: user._id,
       createdAt: new Date(),
@@ -71,6 +74,7 @@ export class AdsService {
     minPrice: number,
     maxPrice: number,
     withImages: boolean,
+    search: string,
   ): Promise<FindAllAdsResponse> {
     const ADS_PER_PAGE = 2;
 
@@ -80,12 +84,6 @@ export class AdsService {
         : sort === SortOptions.PrideDesc
         ? { price: -1 }
         : { createdAt: -1 };
-
-    interface Filters {
-      price: { $gte: number; $lte: number };
-      category?: AdCategories;
-      images?: { $ne: [] };
-    }
 
     const filters: Filters = {
       price: { $gte: minPrice, $lte: maxPrice },
@@ -99,11 +97,19 @@ export class AdsService {
       filters.images = { $ne: [] };
     }
 
+    if (!!search) {
+      const regexWithOptions = { $regex: search, $options: 'i' };
+      filters.$or = [
+        { title: regexWithOptions },
+        { description: regexWithOptions },
+      ];
+    }
+
     const ads = await this.adModel
       .find(filters)
       .sort(sortOption)
       .limit(ADS_PER_PAGE)
-      .skip((page - 1) * ADS_PER_PAGE)
+      .skip(page > 1 ? (page - 1) * ADS_PER_PAGE : 0)
       .exec();
 
     const adsNumber = await this.adModel.find(filters).countDocuments();
@@ -113,10 +119,74 @@ export class AdsService {
 
   async findOne(id: string): Promise<Ad> {
     try {
-      return await this.adModel.findById(id).exec();
+      const ad = await this.adModel.findById(id).exec();
+      if (!ad) {
+        throw new NotFoundException(ErrMessage.NoAd);
+      }
+      return ad;
     } catch {
       throw new NotFoundException(ErrMessage.NoAd);
     }
+  }
+
+  async findOneWithCreator(id: string): Promise<Ad> {
+    try {
+      const ad = await this.adModel
+        .findById(id)
+        .populate({
+          path: 'creator',
+          select: 'username email phone isOnline lastSeen ads',
+          populate: {
+            path: 'ads',
+          },
+        })
+        .exec();
+
+      if (!ad) {
+        throw new NotFoundException(ErrMessage.NoAd);
+      }
+      return ad;
+    } catch {
+      throw new NotFoundException(ErrMessage.NoAd);
+    }
+  }
+
+  async findUserAds(user: User): Promise<Ad[]> {
+    try {
+      const { _id } = user;
+      const ads = await this.adModel.find({ creator: _id }).exec();
+      return ads;
+    } catch {
+      throw new NotFoundException(ErrMessage.NoUser);
+    }
+  }
+
+  async adUserToFavouriteBy(user: User, id: string): Promise<Ad> {
+    const userId = user._id;
+    const ad = await this.findOne(id);
+
+    if (ad.favouriteBy.includes(userId)) {
+      throw new ConflictException(ErrMessage.UserHasAdInFavourites);
+    }
+
+    ad.favouriteBy = [...ad.favouriteBy, userId];
+
+    return await ad.save();
+  }
+
+  async removeUserFromFavouriteBy(user: User, id: string): Promise<Ad> {
+    const userId = user._id;
+    const ad = await this.findOne(id);
+
+    if (!ad.favouriteBy.includes(userId)) {
+      throw new NotFoundException(ErrMessage.UserDoesNotHaveAdInFavourites);
+    }
+
+    ad.favouriteBy = ad.favouriteBy.filter((user) => {
+      return user.toString() !== userId.toString();
+    });
+
+    return await ad.save();
   }
 
   async update(
@@ -171,17 +241,32 @@ export class AdsService {
     const { ads } = user;
     const ad = await this.findOne(id);
 
+    const { favouriteBy } = ad;
+
     const isAuthorized = ads.map((ad) => ad.toString()).includes(id);
     if (!isAuthorized) {
       throw new UnauthorizedException(ErrMessage.Unauthorized);
     }
 
-    ad.images.length > 0 && (await this.filesService.removeFiles(ad.images));
+    if (ad.images.length > 0) {
+      await this.filesService.removeFiles(ad.images);
+    }
 
-    const updatedUserAds = ads.filter((ad) => ad.toString() !== id);
-    user.ads = updatedUserAds;
+    if (!!favouriteBy && favouriteBy.length > 0) {
+      const users = await Promise.all(
+        favouriteBy.map(
+          async (user) => await this.usersService.findById(user.toString()),
+        ),
+      );
 
-    await user.save();
+      users.forEach(
+        async (user) =>
+          await this.usersService.removeAdFromFavourites(user, ad),
+      );
+    }
+
+    await this.usersService.removeAd(user, ad);
+
     await ad.delete();
 
     return mainResponse(ResMessage.AdDeleted);

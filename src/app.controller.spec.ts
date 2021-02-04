@@ -13,7 +13,7 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return "ELCTR - classifieds app!"', () => {
+    it('should return "ELCTR - classifieds app"', () => {
       expect(appController.getHello()).toBe('ELCTR - classifieds app');
     });
   });

@@ -17,19 +17,25 @@ import {
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UserObject } from '../shared/decorators/user-obj.decortor';
-import { FindAllAdsResponse, MainResponse } from 'src/shared/types/response';
+import { FindAllAdsResponse, MainResponse } from '../shared/types/response';
 import { User } from '../users/schema/user.schema';
 import { AdsService } from './ads.service';
 import { CreateAdDto } from './dto/create-ad.dto';
 import { UpdateAdDto } from './dto/update-ad.dto';
 import { Ad } from './schema/ad.schema';
 import { SortOptions } from '../shared/types/sort-options';
-import { AdCategories } from 'src/shared/types/ad-categories';
-import { allowedPrice } from 'src/shared/constants/allowed-price';
+import { AdCategories } from '../shared/types/ad-categories';
+import { allowedPrice } from '../shared/constants/allowed-price';
 
 @Controller('/ads')
 export class AdsController {
   constructor(private readonly adsService: AdsService) {}
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/user')
+  findUserAds(@UserObject() user: User): Promise<Ad[]> {
+    return this.adsService.findUserAds(user);
+  }
 
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FilesInterceptor('files'))
@@ -54,6 +60,7 @@ export class AdsController {
     maxPrice: number,
     @Query('withimages', new DefaultValuePipe(false), ParseBoolPipe)
     withImages: boolean,
+    @Query('search', new DefaultValuePipe('')) search: string,
   ): Promise<FindAllAdsResponse> {
     return this.adsService.findAll(
       page,
@@ -62,12 +69,13 @@ export class AdsController {
       minPrice,
       maxPrice,
       withImages,
+      search,
     );
   }
 
   @Get('/:id')
-  findOne(@Param('id') id: string): Promise<Ad> {
-    return this.adsService.findOne(id);
+  findOneWithCreator(@Param('id') id: string): Promise<Ad> {
+    return this.adsService.findOneWithCreator(id);
   }
 
   @UseGuards(JwtAuthGuard)

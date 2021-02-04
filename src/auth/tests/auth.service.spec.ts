@@ -70,6 +70,9 @@ describe('AuthService', () => {
       res,
     );
 
+    expect(authService.generateToken).toHaveBeenCalledTimes(1);
+    expect(authService.createToken).toHaveBeenCalledTimes(1);
+    expect(usersService.findByEmail).toHaveBeenCalledTimes(1);
     expect(loginUser).toEqual(mainResponse(ResMessage.LoggedIn));
   });
 

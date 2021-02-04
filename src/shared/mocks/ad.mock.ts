@@ -36,7 +36,7 @@ export const adMock = (
   creator = 'u1',
   category = AdCategories.Laptops,
   price = 399,
-  state = 'used',
+  state: 'used' | 'new' = 'used',
   description = 'Lorem ipsum dolor sit amet.',
   images = [],
   favouriteBy = [],
@@ -56,6 +56,12 @@ export const adMock = (
   save: () => null,
 });
 
+export const adListMock: AdMock[] = [
+  adMock(),
+  adMock('ad2', 'Second Ad', 'u1', AdCategories.Tablets, 500),
+  adMock('ad3', 'Third Ad', 'u2', AdCategories.Smartphones, 700, 'new'),
+];
+
 export const adDocMock = (mock?: AdMock): Partial<AdDoc> => ({
   _id: (mock && mock._id) || 'ad1',
   title: (mock && mock.title) || 'First Ad',
@@ -74,4 +80,5 @@ export const adDocMock = (mock?: AdMock): Partial<AdDoc> => ({
 export const adModelMock = {
   create: jest.fn().mockResolvedValue(adMock()),
   findById: jest.fn(),
+  find: jest.fn(),
 };
