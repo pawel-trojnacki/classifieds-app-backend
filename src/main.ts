@@ -23,6 +23,6 @@ async function bootstrap() {
     region: process.env.AWS_REGION,
   });
 
-  await app.listen(process.env.PORT || 5000);
+  await app.listen(parseInt(process.env.PORT) || 5000);
 }
 bootstrap();
