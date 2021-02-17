@@ -26,15 +26,19 @@ export class FavouritesService {
     return favouriteAds;
   }
 
-  async addToFavourites(user: User, id: string): Promise<MainResponse> {
+  async addToFavourites(user: User, id: string): Promise<Ad[]> {
     const ad = await this.adsService.adUserToFavouriteBy(user, id);
-    await this.usersService.addAdToFavourites(user, ad);
-    return mainResponse(ResMessage.AdAddedToFavourites);
+    const savedUser = await this.usersService.addAdToFavourites(user, ad);
+    const favourites = await this.findFavourites(savedUser);
+    return favourites;
+    // return mainResponse(ResMessage.AdAddedToFavourites);
   }
 
-  async removeFromFavourites(user: User, id: string): Promise<MainResponse> {
+  async removeFromFavourites(user: User, id: string): Promise<Ad[]> {
     const ad = await this.adsService.removeUserFromFavouriteBy(user, id);
-    await this.usersService.removeAdFromFavourites(user, ad);
-    return mainResponse(ResMessage.AdRemovedFromFavourites);
+    const savedUser = await this.usersService.removeAdFromFavourites(user, ad);
+    const favourites = await this.findFavourites(savedUser);
+    // return mainResponse(ResMessage.AdRemovedFromFavourites);
+    return favourites;
   }
 }

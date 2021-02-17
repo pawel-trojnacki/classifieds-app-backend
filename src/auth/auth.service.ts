@@ -61,7 +61,7 @@ export class AuthService {
 
       return res
         .cookie('jwt', token.accessToken, {
-          httpOnly: true,
+          httpOnly: false,
         })
         .json(mainResponse(ResMessage.LoggedIn));
     } catch {
@@ -77,7 +77,7 @@ export class AuthService {
       await user.save();
 
       res
-        .clearCookie('jwt', { httpOnly: true })
+        .clearCookie('jwt', { httpOnly: false })
         .json(mainResponse(ResMessage.LoggedOut));
     } catch {
       return res.status(500).json(errResponse(ErrMessage.Unknown));

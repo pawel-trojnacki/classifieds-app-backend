@@ -114,6 +114,7 @@ export class AdsService {
 
     const adsNumber = await this.adModel.find(filters).countDocuments();
     const pages = Math.ceil(adsNumber / ADS_PER_PAGE);
+
     return { ads, pages };
   }
 

@@ -1,5 +1,5 @@
-import { MainResponse } from '../types/response';
-export const errResponse = (message: string): MainResponse => ({
+export const errResponse = (message: string) => ({
   status: 'error',
+  error: message,
   message,
 });

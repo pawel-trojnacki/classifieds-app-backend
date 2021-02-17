@@ -10,7 +10,7 @@ export enum ResMessage {
 }
 
 export enum ErrMessage {
-  InvalidCredentials = 'Invlid credentials',
+  InvalidCredentials = 'Invalid credentials',
   Unauthorized = 'Unauthorized',
   Unknown = 'Unknown error occured',
   NoAd = 'There is no a such ad',

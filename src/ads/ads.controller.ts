@@ -50,7 +50,7 @@ export class AdsController {
 
   @Get('/')
   findAll(
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('p', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('sort', new DefaultValuePipe(SortOptions.Newest)) sort: SortOptions,
     @Query('category', new DefaultValuePipe('all'))
     category: AdCategories | 'all',
@@ -60,7 +60,7 @@ export class AdsController {
     maxPrice: number,
     @Query('withimages', new DefaultValuePipe(false), ParseBoolPipe)
     withImages: boolean,
-    @Query('search', new DefaultValuePipe('')) search: string,
+    @Query('phrase', new DefaultValuePipe('')) search: string,
   ): Promise<FindAllAdsResponse> {
     return this.adsService.findAll(
       page,
