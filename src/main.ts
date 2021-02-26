@@ -1,6 +1,7 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import * as cookieParser from 'cookie-parser';
+import * as bodyParser from 'body-parser';
 import * as helmet from 'helmet';
 import { config } from 'aws-sdk';
 import { AppModule } from './app.module';
@@ -16,6 +17,8 @@ async function bootstrap() {
     }),
   );
   app.use(cookieParser());
+  app.use(bodyParser.json({ limit: '20mb' }));
+  app.use(bodyParser.urlencoded({ limit: '20mb', extended: true }));
   app.use(helmet());
   config.update({
     accessKeyId: process.env.AWS_KEY,
