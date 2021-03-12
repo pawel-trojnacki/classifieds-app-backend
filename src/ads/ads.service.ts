@@ -76,7 +76,7 @@ export class AdsService {
     withImages: boolean,
     search: string,
   ): Promise<FindAllAdsResponse> {
-    const ADS_PER_PAGE = 2;
+    const ADS_PER_PAGE = 8;
 
     const sortOption =
       sort === SortOptions.PriceAsc
