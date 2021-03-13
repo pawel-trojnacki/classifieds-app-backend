@@ -62,7 +62,7 @@ export class AuthService {
       return res
         .cookie('jwt', token.accessToken, {
           // httpOnly: false,
-          domain: `${process.env.CLIENT_URL}`,
+          sameSite: 'none',
         })
         .json(mainResponse(ResMessage.LoggedIn));
     } catch {
@@ -80,7 +80,7 @@ export class AuthService {
       res
         .clearCookie('jwt', {
           // httpOnly: false,
-          domain: `${process.env.CLIENT_URL}`,
+          sameSite: 'none',
         })
         .json(mainResponse(ResMessage.LoggedOut));
     } catch {
