@@ -63,6 +63,7 @@ export class AuthService {
         .cookie('jwt', token.accessToken, {
           // httpOnly: false,
           sameSite: 'none',
+          secure: true,
         })
         .json(mainResponse(ResMessage.LoggedIn));
     } catch {
@@ -81,6 +82,7 @@ export class AuthService {
         .clearCookie('jwt', {
           // httpOnly: false,
           sameSite: 'none',
+          secure: true,
         })
         .json(mainResponse(ResMessage.LoggedOut));
     } catch {
