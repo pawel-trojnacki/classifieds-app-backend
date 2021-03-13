@@ -61,7 +61,8 @@ export class AuthService {
 
       return res
         .cookie('jwt', token.accessToken, {
-          // httpOnly: false,
+          domain: `${process.env.CLIENT_DOMAIN}`,
+          httpOnly: false,
           sameSite: 'none',
           secure: true,
         })
@@ -80,7 +81,8 @@ export class AuthService {
 
       res
         .clearCookie('jwt', {
-          // httpOnly: false,
+          domain: `${process.env.CLIENT_DOMAIN}`,
+          httpOnly: false,
           sameSite: 'none',
           secure: true,
         })
