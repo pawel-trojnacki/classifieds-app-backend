@@ -19,7 +19,7 @@ async function bootstrap() {
   app.use(cookieParser());
   app.use(bodyParser.json({ limit: '20mb' }));
   app.use(bodyParser.urlencoded({ limit: '20mb', extended: true }));
-  app.use(helmet());
+  // app.use(helmet());
   config.update({
     accessKeyId: process.env.AWS_KEY,
     secretAccessKey: process.env.AWS_SECRET_KEY,
